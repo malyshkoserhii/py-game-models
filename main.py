@@ -1,7 +1,5 @@
 import init_django_orm  # noqa: F401
 import json
-from django.utils import timezone
-
 
 from db.models import Race, Skill, Player, Guild
 
@@ -11,8 +9,10 @@ def main() -> None:
         data = json.load(players_file)
 
     for player_name, player_info in data.items():
-        race_data = player_info.get("race")
+        race_obj = None
+        guild_obj = None
 
+        race_data = player_info.get("race")
         if race_data:
             race_obj, _ = Race.objects.get_or_create(
                 name=race_data.get("name"),
@@ -27,8 +27,6 @@ def main() -> None:
                 )
 
         guild_data = player_info.get("guild")
-        guild_obj = None
-
         if guild_data is not None:
             guild_obj, _ = Guild.objects.get_or_create(
                 name=guild_data.get("name"),
@@ -40,8 +38,7 @@ def main() -> None:
             race=race_obj,
             guild=guild_obj,
             bio=player_info.get("bio"),
-            email=player_info.get("email"),
-            created_at=timezone.now()
+            email=player_info.get("email")
         )
 
 
