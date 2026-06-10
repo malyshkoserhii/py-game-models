@@ -1,5 +1,7 @@
 import init_django_orm  # noqa: F401
 import json
+from django.utils import timezone
+
 
 from db.models import Race, Skill, Player, Guild
 
@@ -9,27 +11,28 @@ def main() -> None:
         data = json.load(players_file)
 
     for player_name, player_info in data.items():
-        race = player_info["race"]
+        race_data = player_info.get("race")
 
-        race_obj, _ = Race.objects.get_or_create(
-            name=race["name"],
-            description=race["description"]
-        )
-
-        for skill in race.get("skills", []):
-            Skill.objects.get_or_create(
-                name=skill["name"],
-                bonus=skill["bonus"],
-                race=race_obj
+        if race_data:
+            race_obj, _ = Race.objects.get_or_create(
+                name=race_data.get("name"),
+                description=race_data.get("description")
             )
 
-        guild_obj = None
-        guild = player_info.get("guild")
+            for skill in race_data.get("skills", []):
+                Skill.objects.get_or_create(
+                    name=skill.get("name"),
+                    bonus=skill.get("bonus"),
+                    race=race_obj
+                )
 
-        if guild:
+        guild_data = player_info.get("guild")
+        guild_obj = None
+
+        if guild_data is not None:
             guild_obj, _ = Guild.objects.get_or_create(
-                name=guild["name"],
-                description=guild.get("description")
+                name=guild_data.get("name"),
+                description=guild_data.get("description")
             )
 
         Player.objects.get_or_create(
@@ -37,7 +40,8 @@ def main() -> None:
             race=race_obj,
             guild=guild_obj,
             bio=player_info.get("bio"),
-            email=player_info.get("email")
+            email=player_info.get("email"),
+            created_at=timezone.now()
         )
 
 
